@@ -17,7 +17,7 @@ public sealed class Plugin : BasePlugin
     {
         Logger = base.Log;
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll();
+        _harmony.PatchAll(); // Includes the Puzzles.KeyGrinderScatter patch.
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded.");
     }
 }
