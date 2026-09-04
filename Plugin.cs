@@ -22,7 +22,7 @@ public sealed class Plugin : BasePlugin
         Puzzles.RedTowerKeyLaunch.Bind(Config);
         Puzzles.PuzzleContainerBabyLaunch.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes puzzle-container baby release launch behavior.
+        _harmony.PatchAll(); // Includes the Green Tower soundproof barn relay patch.
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
 
