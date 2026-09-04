@@ -16,8 +16,12 @@ public sealed class Plugin : BasePlugin
     public override void Load()
     {
         Logger = base.Log;
+        GameModeConfig.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes the Puzzles.KeyGrinderScatter patch.
-        Logger.LogInfo($"{PluginName} {PluginVersion} loaded.");
+        _harmony.PatchAll();
+        Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
+
+    internal static bool AreHardWalkMechanicsEnabled(int playerCount) =>
+        GameModeConfig.IsHardWalkActive(playerCount);
 }
