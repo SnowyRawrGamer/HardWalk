@@ -17,8 +17,9 @@ public sealed class Plugin : BasePlugin
     {
         Logger = base.Log;
         GameModeConfig.Bind(Config);
+        Puzzles.HoopTossMovingTarget.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes Red Tower expanded-grid and beach-maze anti-cheat patches.
+        _harmony.PatchAll(); // Includes Red Tower relay-mask and moving-hoop patches.
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
 
