@@ -23,7 +23,7 @@ public sealed class Plugin : BasePlugin
         Puzzles.PuzzleContainerBabyLaunch.Bind(Config);
         Puzzles.GreenMinefieldStandsExpansion.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes Green Tower minefield and tether-button behavior.
+        _harmony.PatchAll(); // Includes Green Tower moving train coordinate target behavior.
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
 
