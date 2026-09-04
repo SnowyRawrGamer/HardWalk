@@ -16,17 +16,11 @@ public sealed class Plugin : BasePlugin
     public override void Load()
     {
         Logger = base.Log;
-        GameModeConfig.Bind(Config);
-        Puzzles.HoopTossMovingTarget.Bind(Config);
-        Puzzles.CannonTimerWeakLaunch.Bind(Config);
-        Puzzles.RedTowerKeyLaunch.Bind(Config);
-        Puzzles.PuzzleContainerBabyLaunch.Bind(Config);
-        Puzzles.GreenMinefieldStandsExpansion.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes the Hard Walk spawn warning sign.
-        Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
+        // All game-targeting patches are intentionally disabled until matched against the
+        // shipped Unity 6000.3.17f1 / metadata-v39 Steam dump. PatchAll is safe here because
+        // unverified patch classes are excluded with HARDWALK_ENABLE_UNVERIFIED_PATCHES.
+        _harmony.PatchAll();
+        Logger.LogInfo($"{PluginName} {PluginVersion} loaded; no unverified game patches enabled.");
     }
-
-    internal static bool AreHardWalkMechanicsEnabled(int playerCount) =>
-        GameModeConfig.IsHardWalkActive(playerCount);
 }
