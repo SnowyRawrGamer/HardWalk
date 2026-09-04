@@ -9,7 +9,7 @@ namespace HardWalk.Global;
 internal static class SpawnHardWalkSign
 {
     private const string SignName = "HardWalk_WelcomeWarningSign";
-    private const string SignText = "WARNING: HARD WALK ACTIVE\nGood luck, you're gonna need it.\nMade by Snowy";
+    private const string SignText = "Welcome to Hard Walk. This is a harder version of Big Walk designed for 4+ players by SnowyRawrGamer. It’s recommended to beat the normal game before playing Hard Walk. Good luck, you are going to need it.";
 
     [HarmonyPostfix]
     [HarmonyPatch("SpawnArea", "Initialize")]
