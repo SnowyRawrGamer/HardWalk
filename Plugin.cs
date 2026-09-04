@@ -20,8 +20,9 @@ public sealed class Plugin : BasePlugin
         Puzzles.HoopTossMovingTarget.Bind(Config);
         Puzzles.CannonTimerWeakLaunch.Bind(Config);
         Puzzles.RedTowerKeyLaunch.Bind(Config);
+        Puzzles.PuzzleContainerBabyLaunch.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes the tutorial pedestal baby fakeout patch.
+        _harmony.PatchAll(); // Includes puzzle-container baby release launch behavior.
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
 
