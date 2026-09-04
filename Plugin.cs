@@ -21,8 +21,9 @@ public sealed class Plugin : BasePlugin
         Puzzles.CannonTimerWeakLaunch.Bind(Config);
         Puzzles.RedTowerKeyLaunch.Bind(Config);
         Puzzles.PuzzleContainerBabyLaunch.Bind(Config);
+        Puzzles.GreenMinefieldStandsExpansion.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes the Green Tower soundproof barn relay patch.
+        _harmony.PatchAll(); // Includes Green Tower minefield and tether-button behavior.
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
 
