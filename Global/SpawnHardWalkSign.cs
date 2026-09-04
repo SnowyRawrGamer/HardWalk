@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace HardWalk.Global;
 
-// Adds a physical welcome sign to the starting beach spawn path when Hard Walk is active.
-// Replace target type/method names and spawn transform lookup with those from the IL2CPP dump.
+// Adds a physical welcome sign to the true starting RedRoom/Gym spawn when Hard Walk is active.
+// TODO: Verify the exact RedRoom/Gym identifiers and spawn transform against dumped IL2CPP metadata.
 [HarmonyPatch]
 internal static class SpawnHardWalkSign
 {
@@ -18,12 +18,13 @@ internal static class SpawnHardWalkSign
         if (!HardWalk.Plugin.AreHardWalkMechanicsEnabled(playerCount) || spawnArea == null) return;
         if (spawnArea.Find(SignName) != null) return;
 
-        // Anchor to the authored starting beach/player-spawn path, never to a campfire object.
-        var beachSpawn = FindStartingBeachSpawn(spawnArea);
-        if (beachSpawn == null) return;
+        // The sign belongs at the indoor RedRoom/Gym starting area, not at the distant beach.
+        // These candidate paths are placeholders until IL2CPP metadata confirms the real hierarchy.
+        var gymSpawn = FindRedRoomGymSpawn(spawnArea);
+        if (gymSpawn == null) return;
 
         var sign = new GameObject(SignName);
-        sign.transform.SetParent(beachSpawn, false);
+        sign.transform.SetParent(gymSpawn, false);
         sign.transform.localPosition = new Vector3(0f, 1.35f, 2.5f);
         sign.transform.localRotation = Quaternion.identity;
 
@@ -53,11 +54,17 @@ internal static class SpawnHardWalkSign
         text.color = Color.yellow;
     }
 
-    private static Transform? FindStartingBeachSpawn(Transform spawnArea)
+    // Candidate identifiers to verify once IL2CPP metadata is available:
+    // RedRoom, RedRoomSpawn, Gym, GymSpawn, StartRoom, PlayerStart, and RedRoom/Gym/PlayerSpawn.
+    private static Transform? FindRedRoomGymSpawn(Transform spawnArea)
     {
-        return spawnArea.Find("StartingBeachSpawn")
-            ?? spawnArea.Find("BeachSpawn")
-            ?? spawnArea.Find("PlayerSpawn")
-            ?? spawnArea.Find("StartingArea/BeachSpawn");
+        return spawnArea.Find("RedRoom/Gym/PlayerSpawn")
+            ?? spawnArea.Find("RedRoom/GymSpawn")
+            ?? spawnArea.Find("RedRoom/RedRoomSpawn")
+            ?? spawnArea.Find("Gym/PlayerSpawn")
+            ?? spawnArea.Find("Gym/GymSpawn")
+            ?? spawnArea.Find("RedRoomSpawn")
+            ?? spawnArea.Find("GymSpawn")
+            ?? spawnArea.Find("PlayerStart");
     }
 }
