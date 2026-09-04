@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace HardWalk.Global;
 
-// Adds a physical welcome/warning sign at the starting campfire when Hard Walk is active.
+// Adds a physical welcome sign to the starting beach spawn path when Hard Walk is active.
 // Replace target type/method names and spawn transform lookup with those from the IL2CPP dump.
 [HarmonyPatch]
 internal static class SpawnHardWalkSign
@@ -18,8 +18,12 @@ internal static class SpawnHardWalkSign
         if (!HardWalk.Plugin.AreHardWalkMechanicsEnabled(playerCount) || spawnArea == null) return;
         if (spawnArea.Find(SignName) != null) return;
 
+        // Anchor to the authored starting beach/player-spawn path, never to a campfire object.
+        var beachSpawn = FindStartingBeachSpawn(spawnArea);
+        if (beachSpawn == null) return;
+
         var sign = new GameObject(SignName);
-        sign.transform.SetParent(spawnArea, false);
+        sign.transform.SetParent(beachSpawn, false);
         sign.transform.localPosition = new Vector3(0f, 1.35f, 2.5f);
         sign.transform.localRotation = Quaternion.identity;
 
@@ -47,5 +51,13 @@ internal static class SpawnHardWalkSign
         text.fontSize = 48;
         text.characterSize = 0.08f;
         text.color = Color.yellow;
+    }
+
+    private static Transform? FindStartingBeachSpawn(Transform spawnArea)
+    {
+        return spawnArea.Find("StartingBeachSpawn")
+            ?? spawnArea.Find("BeachSpawn")
+            ?? spawnArea.Find("PlayerSpawn")
+            ?? spawnArea.Find("StartingArea/BeachSpawn");
     }
 }
