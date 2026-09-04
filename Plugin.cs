@@ -24,7 +24,7 @@ public sealed class Plugin : BasePlugin
         Puzzles.GreenMinefieldStandsExpansion.Bind(Config);
         _harmony = new Harmony(PluginGuid);
         _harmony.PatchAll(); // Includes Green Tower monitor decoy silhouette behavior.
-        Logger.LogInfo($"{PluginName} {PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
+        Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
 
     internal static bool AreHardWalkMechanicsEnabled(int playerCount) =>
