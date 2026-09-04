@@ -4,27 +4,39 @@ using UnityEngine;
 namespace HardWalk;
 
 // UI/network method names are placeholders until confirmed against the game's IL2CPP dump.
-// The host is authoritative: clients cannot activate Hard Walk independently.
-[HarmonyLib.HarmonyPatch]
+// Big Walk's player-count selector remains the top-level choice. Hard Walk is nested under 4+.
+[HarmonyPatch]
 internal static class LobbyGameModeSelector
 {
+    internal const string TwoPlayersLabel = "2 Players";
+    internal const string ThreePlayersLabel = "3 Players";
+    internal const string FourPlusPlayersLabel = "4+ Players";
     internal const string BigWalkLabel = "Big Walk";
     internal const string HardWalkLabel = "Hard Walk";
-    internal const string HardWalkRequirementText = "Requires 4+ players";
 
-    [HarmonyLib.HarmonyPostfix]
-    [HarmonyLib.HarmonyPatch("LobbyHostSettings", "OnPlayerCountChanged")]
-    private static void PlayerCountChangedPostfix(int playerCount)
+    [HarmonyPostfix]
+    [HarmonyPatch("LobbyHostSettings", "OnPlayerCountChanged")]
+    private static void PlayerCountChangedPostfix(LobbyPlayerCountMode mode, int playerCount)
     {
-        GameModeConfig.EnforcePlayerRequirement(playerCount);
-        RefreshModeSelector(playerCount);
+        GameModeConfig.SelectPlayerCount(mode, playerCount);
+        RefreshModeSelector(mode, playerCount);
     }
 
-    [HarmonyLib.HarmonyPrefix]
-    [HarmonyLib.HarmonyPatch("LobbyHostSettings", "SetGameMode")]
-    private static bool SetGameModePrefix(HardWalkGameMode requestedMode, int playerCount, ref bool __result)
+    [HarmonyPrefix]
+    [HarmonyPatch("LobbyHostSettings", "SetPlayerCountMode")]
+    private static bool SetPlayerCountModePrefix(LobbyPlayerCountMode mode, int playerCount, ref bool __result)
     {
-        if (requestedMode == HardWalkGameMode.HardWalk && !GameModeConfig.IsHardWalkAllowed(playerCount))
+        GameModeConfig.SelectPlayerCount(mode, playerCount);
+        RefreshModeSelector(mode, playerCount);
+        __result = true;
+        return false;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch("LobbyHostSettings", "SetGameMode")]
+    private static bool SetGameModePrefix(HardWalkGameMode requestedMode, LobbyPlayerCountMode playerMode, int playerCount, ref bool __result)
+    {
+        if (requestedMode == HardWalkGameMode.HardWalk && !GameModeConfig.IsHardWalkAllowed(playerMode, playerCount))
         {
             GameModeConfig.SelectedMode.Value = HardWalkGameMode.BigWalk;
             __result = false;
@@ -36,23 +48,41 @@ internal static class LobbyGameModeSelector
         return false;
     }
 
-    [HarmonyLib.HarmonyPostfix]
-    [HarmonyLib.HarmonyPatch("LobbyHostSettings", "BuildModeOptions")]
-    private static void BuildModeOptionsPostfix(int playerCount, ref object[] __result)
+    [HarmonyPostfix]
+    [HarmonyPatch("LobbyHostSettings", "BuildPlayerCountOptions")]
+    private static void BuildPlayerCountOptionsPostfix(ref object[] __result)
     {
-        var hardWalkEnabled = GameModeConfig.IsHardWalkAllowed(playerCount);
         __result = new object[]
         {
-            new { Id = HardWalkGameMode.BigWalk, Label = BigWalkLabel, Description = GameModeConfig.BigWalkDescription, Enabled = true },
-            new { Id = HardWalkGameMode.HardWalk, Label = HardWalkLabel, Description = hardWalkEnabled ? GameModeConfig.HardWalkDescription : HardWalkRequirementText, Enabled = hardWalkEnabled }
+            new { Id = LobbyPlayerCountMode.TwoPlayers, Label = TwoPlayersLabel, Enabled = true },
+            new { Id = LobbyPlayerCountMode.ThreePlayers, Label = ThreePlayersLabel, Enabled = true },
+            new { Id = LobbyPlayerCountMode.FourPlusPlayers, Label = FourPlusPlayersLabel, Enabled = true }
         };
     }
 
-    private static void RefreshModeSelector(int playerCount)
+    [HarmonyPostfix]
+    [HarmonyPatch("LobbyHostSettings", "BuildGameModeOptions")]
+    private static void BuildGameModeOptionsPostfix(LobbyPlayerCountMode playerMode, int playerCount, ref object[] __result)
     {
-        // The actual UI bridge should set the Hard Walk option interactable state and helper text.
+        if (!GameModeConfig.IsFourPlus(playerMode))
+        {
+            __result = System.Array.Empty<object>();
+            return;
+        }
+
+        __result = new object[]
+        {
+            new { Id = HardWalkGameMode.BigWalk, Label = BigWalkLabel, Description = GameModeConfig.BigWalkDescription, Enabled = true },
+            new { Id = HardWalkGameMode.HardWalk, Label = HardWalkLabel, Description = GameModeConfig.HardWalkDescription, Enabled = GameModeConfig.IsHardWalkAllowed(playerMode, playerCount) }
+        };
+    }
+
+    private static void RefreshModeSelector(LobbyPlayerCountMode playerMode, int playerCount)
+    {
         var selector = GameObject.Find("LobbyHostSettings/ModeSelector");
         if (selector == null) return;
-        selector.SetActive(selector.activeSelf); // Keep a safe, no-op placeholder hook.
+        // Replace with the game's UI bridge: hide the nested mode selector for 2/3 Players,
+        // and show/disable the Hard Walk option based on the 4+ player requirement.
+        selector.SetActive(GameModeConfig.IsFourPlus(playerMode));
     }
 }
