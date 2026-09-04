@@ -19,8 +19,9 @@ public sealed class Plugin : BasePlugin
         GameModeConfig.Bind(Config);
         Puzzles.HoopTossMovingTarget.Bind(Config);
         Puzzles.CannonTimerWeakLaunch.Bind(Config);
+        Puzzles.RedTowerKeyLaunch.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll(); // Includes the final Red Tower cannon timer patch.
+        _harmony.PatchAll(); // Includes the final Red Tower key launch patch.
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded. Hard Walk mode requires 4+ players.");
     }
 
