@@ -19,14 +19,33 @@ public sealed class Plugin : BasePlugin
         Logger = base.Log;
         GameModeConfig.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        _harmony.PatchAll();
 
-        if (LobbyGameModeSelector.TryPatch(_harmony))
-            Logger.LogInfo("Lobby player-count patch installed.");
-        else
-            Logger.LogWarning("Lobby player-count API was not found; skipping optional lobby UI patch.");
+        // Puzzle patch classes currently contain speculative IL2CPP targets. Harmony's
+        // PatchAll() discovers them by attribute and throws on the first missing target;
+        // never let one optional patch prevent the plugin (and verified patches) loading.
+        try
+        {
+            _harmony.PatchAll();
+            Logger.LogInfo("Harmony patch registration completed.");
+        }
+        catch (Exception exception)
+        {
+            Logger.LogWarning($"One or more optional Harmony patches were skipped: {exception}");
+        }
 
-        Logger.LogInfo($"{PluginName} {PluginVersion} loaded; verified v1.0 tutorial and lobby-mode patches are enabled where supported.");
+        try
+        {
+            if (LobbyGameModeSelector.TryPatch(_harmony))
+                Logger.LogInfo("Lobby player-count patch installed.");
+            else
+                Logger.LogWarning("Lobby player-count API was not found; skipping optional lobby UI patch.");
+        }
+        catch (Exception exception)
+        {
+            Logger.LogWarning($"Lobby player-count patch failed; continuing without it: {exception}");
+        }
+
+        Logger.LogInfo($"{PluginName} {PluginVersion} loaded; optional patch failures do not abort plugin load.");
     }
 
     // Shared mode gate for world objects, including the v1.0.0 spawn wooden sign.
