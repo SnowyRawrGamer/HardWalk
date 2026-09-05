@@ -1,12 +1,11 @@
+using System;
 using HarmonyLib;
 using UnityEngine;
 
 namespace HardWalk;
 
-// UI integration point for the Host a Game -> 4+ players screen. The selector is deliberately
-// data-driven so the game's menu bridge can render it as native menu choices rather than a world
-// object or an in-lobby physical button.
-[HarmonyPatch]
+// Optional UI integration point. The game has changed the lobby selector type/signature between
+// builds, so this patch is installed dynamically and skipped when the target is unavailable.
 internal static class LobbyGameModeSelector
 {
     internal const string TwoPlayersLabel = "2 Players";
@@ -17,7 +16,7 @@ internal static class LobbyGameModeSelector
 
     internal static object[] BuildVerifiedModeOptions(LobbyPlayerCountMode playerMode, int playerCount)
     {
-        if (!GameModeConfig.IsFourPlus(playerMode)) return System.Array.Empty<object>();
+        if (!GameModeConfig.IsFourPlus(playerMode)) return Array.Empty<object>();
         return new object[]
         {
             new { Id = HardWalkGameMode.NormalWalk, Label = NormalWalkLabel, Description = GameModeConfig.NormalWalkDescription, Enabled = true },
@@ -25,19 +24,27 @@ internal static class LobbyGameModeSelector
         };
     }
 
-    // Host UI callback: called when the host selects a player-count option. The mode choices are
-    // shown only after 4+ players is selected, and leaving that screen safely resets to Normal.
-    [HarmonyPostfix]
-    [HarmonyPatch("LobbyHostSettings", "OnPlayerCountChanged")]
-    private static void PlayerCountChangedPostfix(LobbyPlayerCountMode mode, int playerCount)
+    internal static bool TryPatch(Harmony harmony)
     {
-        GameModeConfig.SelectPlayerCount(mode, playerCount);
-        var selector = GameObject.Find("LobbyHostSettings/ModeSelector");
-        if (selector != null) selector.SetActive(GameModeConfig.IsFourPlus(mode));
+        var targetType = AccessTools.TypeByName("LobbyHostSettings")
+            ?? AccessTools.TypeByName("HardWalk.LobbyHostSettings");
+        var target = targetType == null ? null : AccessTools.Method(targetType, "OnPlayerCountChanged");
+        if (target == null) return false;
+
+        harmony.Patch(target, postfix: new HarmonyMethod(typeof(LobbyGameModeSelector), nameof(PlayerCountChangedPostfix)));
+        return true;
     }
 
-    // Host UI callback: selecting a native Normal Walk/Hard Walk option updates the active mode
-    // before the room is created. Hard Walk can never leak into 2/3-player rooms.
+    // Use object for the mode because the game's enum is not part of the mod assembly and has
+    // changed across builds. This avoids a hard signature dependency while retaining the callback.
+    private static void PlayerCountChangedPostfix(object mode, int playerCount)
+    {
+        if (!Enum.TryParse(mode?.ToString(), ignoreCase: true, out LobbyPlayerCountMode parsedMode)) return;
+        GameModeConfig.SelectPlayerCount(parsedMode, playerCount);
+        var selector = GameObject.Find("LobbyHostSettings/ModeSelector");
+        if (selector != null) selector.SetActive(GameModeConfig.IsFourPlus(parsedMode));
+    }
+
     internal static bool SelectModeFromHostMenu(HardWalkGameMode mode, LobbyPlayerCountMode playerMode, int playerCount)
     {
         return GameModeConfig.SelectMode(mode, playerMode, playerCount);
