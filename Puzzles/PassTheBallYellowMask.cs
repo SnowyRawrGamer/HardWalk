@@ -8,8 +8,8 @@ namespace HardWalk.Puzzles;
 [HarmonyPatch]
 internal static class PassTheBallYellowMask
 {
-    private static GameObject? _maskInstance;
-    private static Component? _currentHolder;
+    private static GameObject _maskInstance;
+    private static Component _currentHolder;
 
     [HarmonyPostfix]
     [HarmonyPatch("PassTheBallRelay", "OnBallPickedUp")]
