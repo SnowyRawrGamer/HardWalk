@@ -16,7 +16,7 @@ internal static class GreenMinefieldStandsExpansion
     internal static ConfigEntry<float> KnockbackForce { get; private set; } = null!;
 
     private static bool _tetherHeld;
-    private static Transform? _remoteContainer;
+    private static Transform _remoteContainer;
 
     internal static void Bind(ConfigFile config)
     {
