@@ -9,59 +9,51 @@
     <RootNamespace>HardWalk</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <NoWarn>$(NoWarn);NU1603</NoWarn>
+    <!-- Pass an absolute, shell-expanded path: -p:GameDir="$HOME/.../Big Walk". -->
+    <GameDir Condition="'$(GameDir)' == ''">$(GAME_DIR)</GameDir>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.788" PrivateAssets="all" />
     <PackageReference Include="HarmonyX" Version="2.10.2" PrivateAssets="all" />
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.4.5" PrivateAssets="all" />
   </ItemGroup>
 
   <!--
-    GameDir must be the Big Walk installation directory, for example:
-      dotnet build -p:GameDir="C:\\Games\\Big Walk"
-    BepInEx 6 IL2CPP puts the generated Unity/game assemblies in interop
-    and the runtime assemblies in core. These explicit references avoid
-    resolving UnityEngine only from the package's compile-time assets.
+    Bash expands $HOME before MSBuild sees this property. Quoting the
+    -p:GameDir argument preserves spaces; MSBuild then uses the value as-is.
+    BepInEx 6 IL2CPP generates dummy Unity/game assemblies in interop and
+    runtime assemblies in core. Do not put these items behind Exists(): that
+    silently drops every reference and causes a misleading error cascade.
   -->
-  <ItemGroup Condition="'$(GameDir)' != ''">
-    <!-- BepInEx/IL2CPP runtime assemblies -->
-    <Reference Include="BepInEx.Core">
-      <HintPath>$(GameDir)/BepInEx/core/BepInEx.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BepInEx.Unity.IL2CPP">
-      <HintPath>$(GameDir)/BepInEx/core/BepInEx.Unity.IL2CPP.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="0Harmony">
-      <HintPath>$(GameDir)/BepInEx/core/0Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Il2CppInterop.Runtime">
-      <HintPath>$(GameDir)/BepInEx/core/Il2CppInterop.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+  <ItemGroup>
+    <InteropAssemblies Include="$(GameDir)/BepInEx/interop/*.dll" />
+    <BepInExCoreAssemblies Include="$(GameDir)/BepInEx/core/*.dll" />
+  </ItemGroup>
 
-    <!-- Unity/game interop (dummy) assemblies -->
-    <Reference Include="UnityEngine">
-      <HintPath>$(GameDir)/BepInEx/interop/UnityEngine.dll</HintPath>
+  <!-- Include all generated assemblies because the exact Unity module set
+       varies by game and BepInEx/Unity version. -->
+  <ItemGroup>
+    <Reference Include="%(InteropAssemblies.Filename)">
+      <HintPath>%(InteropAssemblies.Identity)</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(GameDir)/BepInEx/interop/UnityEngine.CoreModule.dll</HintPath>
+    <Reference Include="%(BepInExCoreAssemblies.Filename)">
+      <HintPath>%(BepInExCoreAssemblies.Identity)</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>$(GameDir)/BepInEx/interop/UnityEngine.PhysicsModule.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>$(GameDir)/BepInEx/interop/UnityEngine.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(GameDir)/BepInEx/interop/Assembly-CSharp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+  </ItemGroup>
+
+  <!-- Explicit minimum set, useful when a build is run before wildcard item
+       evaluation and documenting the assemblies this plugin requires. -->
+  <ItemGroup>
+    <Reference Include="UnityEngine"><HintPath>$(GameDir)/BepInEx/interop/UnityEngine.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameDir)/BepInEx/interop/UnityEngine.CoreModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(GameDir)/BepInEx/interop/UnityEngine.PhysicsModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.UI"><HintPath>$(GameDir)/BepInEx/interop/UnityEngine.UI.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(GameDir)/BepInEx/interop/Assembly-CSharp.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(GameDir)/BepInEx/core/Il2CppInterop.Runtime.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="BepInEx.Core"><HintPath>$(GameDir)/BepInEx/core/BepInEx.Core.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(GameDir)/BepInEx/core/0Harmony.dll</HintPath><Private>False</Private></Reference>
   </ItemGroup>
 </Project>
