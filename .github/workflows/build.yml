@@ -1,0 +1,42 @@
+name: Build HardWalk DLL
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.x
+
+      - name: Locate game reference assemblies
+        id: refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d out_dummy ]; then
+            echo "game_dir=$GITHUB_WORKSPACE" >> "$GITHUB_OUTPUT"
+            echo "Using checked-in out_dummy references."
+          else
+            echo "No out_dummy directory is present in this repository."
+            echo "Commit or upload the required IL2CPP dummy/interop assemblies under out_dummy before running this workflow."
+            exit 1
+          fi
+
+      - name: Build HardWalk.dll
+        run: dotnet build HardWalk.csproj --configuration Release --no-restore -p:GameDir="${{ steps.refs.outputs.game_dir }}"
+
+      - name: Upload HardWalk.dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: HardWalk-dll
+          path: bin/Release/net6.0/HardWalk.dll
+          if-no-files-found: error
