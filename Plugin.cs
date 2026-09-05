@@ -20,6 +20,12 @@ public sealed class Plugin : BasePlugin
         GameModeConfig.Bind(Config);
         _harmony = new Harmony(PluginGuid);
         _harmony.PatchAll();
+
+        if (LobbyGameModeSelector.TryPatch(_harmony))
+            Logger.LogInfo("Lobby player-count patch installed.");
+        else
+            Logger.LogWarning("Lobby player-count API was not found; skipping optional lobby UI patch.");
+
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded; verified v1.0 tutorial and lobby-mode patches are enabled where supported.");
     }
 
