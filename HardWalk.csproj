@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+    <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -8,13 +8,20 @@
     <AssemblyName>HardWalk</AssemblyName>
     <RootNamespace>HardWalk</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>$(NoWarn);NU1603</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.788" PrivateAssets="all" />
-    <PackageReference Include="HarmonyX" Version="2.10.0" PrivateAssets="all" />
+    <PackageReference Include="HarmonyX" Version="2.10.2" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameDir)\Big Walk_Data\Managed\UnityEngine.CoreModule.dll</HintPath><Private>False</Private></Reference>
-    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(GameDir)\Big Walk_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)\Big Walk_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(GameDir)\Big Walk_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 </Project>
