@@ -1,5 +1,6 @@
 using BepInEx;
 using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 
 namespace HardWalk;
@@ -11,7 +12,7 @@ public sealed class Plugin : BasePlugin
     public const string PluginName = "Hard Walk";
     public const string PluginVersion = "1.0.0";
     internal static ManualLogSource Logger = null!;
-    private Harmony? _harmony;
+    private Harmony _harmony;
 
     public override void Load()
     {
