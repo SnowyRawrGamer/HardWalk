@@ -31,8 +31,9 @@ internal static class GreenCoordsMovingTrainTarget
             button.localScale = new Vector3(0.45f, 0.25f, 0.12f);
         }
 
-        var trigger = button.GetComponent<TrainReleaseButton>() ?? button.gameObject.AddComponent<TrainReleaseButton>();
-        trigger.ReleasePuzzle = puzzleHub?.GetComponent<Component>();
+        var trigger = button.GetComponent<TrainReleaseButton>();
+        if (trigger == null) trigger = button.gameObject.AddComponent<TrainReleaseButton>();
+        trigger.ReleasePuzzle = puzzleHub == null ? null : puzzleHub.GetComponent<Component>();
         UpdateBoard(puzzleHub);
     }
 
@@ -41,13 +42,15 @@ internal static class GreenCoordsMovingTrainTarget
     private static void TrainUpdatePostfix(Transform __instance)
     {
         var board = GameObject.Find("GreenCoordinatesPuzzle/CoordinateDisplayBoard");
-        UpdateBoard(board?.transform);
+        UpdateBoard(board == null ? null : board.transform);
     }
 
-    private static Transform? FindRearCaboose(Transform train)
+    private static Transform FindRearCaboose(Transform train)
     {
-        var caboose = train.Find("RearCaboose") ?? train.Find("Caboose") ?? train.Find("Cars/Rear");
-        return caboose ?? train;
+        var caboose = train.Find("RearCaboose");
+        if (caboose == null) caboose = train.Find("Caboose");
+        if (caboose == null) caboose = train.Find("Cars/Rear");
+        return caboose == null ? train : caboose;
     }
 
     private static void UpdateBoard(Transform board)
@@ -59,12 +62,12 @@ internal static class GreenCoordsMovingTrainTarget
 
     private sealed class TrainReleaseButton : MonoBehaviour
     {
-        internal Component? ReleasePuzzle;
+        internal Component ReleasePuzzle;
         private void OnTriggerStay(Collider other)
         {
             if (!other.CompareTag("Player") || ReleasePuzzle == null) return;
             var method = ReleasePuzzle.GetType().GetMethod("OnTrainButtonPressed");
-            method?.Invoke(ReleasePuzzle, null);
+            if (method != null) method.Invoke(ReleasePuzzle, null);
         }
     }
 }
