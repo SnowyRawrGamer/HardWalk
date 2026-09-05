@@ -3,28 +3,38 @@ using UnityEngine;
 
 namespace HardWalk.Global;
 
-// Adds a physical welcome sign to the true starting RedRoom/Gym spawn when Hard Walk is active.
-// TODO: Verify the exact RedRoom/Gym identifiers and spawn transform against dumped IL2CPP metadata.
+// Creates the Hard Walk welcome/warning sign at the indoor RedRoom/Gym spawn.
+// The sign is deliberately self-contained so it works with the game's existing scene objects.
 [HarmonyPatch]
 internal static class SpawnHardWalkSign
 {
     private const string SignName = "HardWalk_WelcomeWarningSign";
-    private const string SignText = "Welcome to Hard Walk. This is a harder version of Big Walk designed for 4+ players by SnowyRawrGamer. It’s recommended to beat the normal game before playing Hard Walk. Good luck, you are going to need it.";
+    private const string BoardName = "HardWalk_WoodenSign";
+    private const string SignText = "HARD WALK\n\nA harder version of Big Walk\nfor 4+ players.\n\nBeat Normal Walk first.\nGood luck — you are going to need it.";
+    private const string InteractionText = "HARD WALK\n\n4+ players • harder puzzles\n\nNormal Walk is recommended first.\nClick the sign to read this warning again.";
 
     [HarmonyPostfix]
     [HarmonyPatch("SpawnArea", "Initialize")]
     private static void InitializePostfix(Transform spawnArea, int playerCount)
     {
-        if (!HardWalk.Plugin.AreHardWalkMechanicsEnabled(playerCount) || spawnArea == null) return;
-        if (spawnArea.Find(SignName) != null) return;
+        if (spawnArea == null || !Plugin.AreHardWalkMechanicsEnabled(playerCount)) return;
+        CreateOrUpdateSign(spawnArea);
+    }
 
-        // The sign belongs at the indoor RedRoom/Gym starting area, not at the distant beach.
-        // These candidate paths are placeholders until IL2CPP metadata confirms the real hierarchy.
-        var gymSpawn = FindRedRoomGymSpawn(spawnArea);
-        if (gymSpawn == null) return;
+    private static void CreateOrUpdateSign(Transform spawnArea)
+    {
+        var spawn = FindRedRoomGymSpawn(spawnArea);
+        if (spawn == null) return;
+
+        var existing = spawnArea.Find(SignName);
+        if (existing != null)
+        {
+            existing.SetParent(spawn, false);
+            return;
+        }
 
         var sign = new GameObject(SignName);
-        sign.transform.SetParent(gymSpawn, false);
+        sign.transform.SetParent(spawn, false);
         sign.transform.localPosition = new Vector3(0f, 1.35f, 2.5f);
         sign.transform.localRotation = Quaternion.identity;
 
@@ -35,10 +45,11 @@ internal static class SpawnHardWalkSign
         post.transform.localScale = new Vector3(0.12f, 1.35f, 0.12f);
 
         var board = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        board.name = "WarningBoard";
+        board.name = BoardName;
         board.transform.SetParent(sign.transform, false);
         board.transform.localPosition = Vector3.zero;
         board.transform.localScale = new Vector3(3.2f, 1.5f, 0.12f);
+        board.GetComponent<Renderer>().material.color = new Color(0.28f, 0.12f, 0.035f);
 
         var textObject = new GameObject("WarningText");
         textObject.transform.SetParent(sign.transform, false);
@@ -52,19 +63,36 @@ internal static class SpawnHardWalkSign
         text.fontSize = 48;
         text.characterSize = 0.08f;
         text.color = Color.yellow;
+
+        var interaction = board.AddComponent<HardWalkSignInteraction>();
+        interaction.SetText(text);
+        Plugin.Logger.LogInfo("Hard Walk v1.0.0 spawn wooden sign created at the RedRoom/Gym spawn.");
     }
 
-    // Candidate identifiers to verify once IL2CPP metadata is available:
-    // RedRoom, RedRoomSpawn, Gym, GymSpawn, StartRoom, PlayerStart, and RedRoom/Gym/PlayerSpawn.
-    private static Transform? FindRedRoomGymSpawn(Transform spawnArea)
+    private static Transform? FindRedRoomGymSpawn(Transform root)
     {
-        return spawnArea.Find("RedRoom/Gym/PlayerSpawn")
-            ?? spawnArea.Find("RedRoom/GymSpawn")
-            ?? spawnArea.Find("RedRoom/RedRoomSpawn")
-            ?? spawnArea.Find("Gym/PlayerSpawn")
-            ?? spawnArea.Find("Gym/GymSpawn")
-            ?? spawnArea.Find("RedRoomSpawn")
-            ?? spawnArea.Find("GymSpawn")
-            ?? spawnArea.Find("PlayerStart");
+        return root.Find("RedRoom/Gym/PlayerSpawn")
+            ?? root.Find("RedRoom/GymSpawn")
+            ?? root.Find("RedRoom/RedRoomSpawn")
+            ?? root.Find("Gym/PlayerSpawn")
+            ?? root.Find("Gym/GymSpawn")
+            ?? root.Find("RedRoomSpawn")
+            ?? root.Find("GymSpawn")
+            ?? root.Find("PlayerStart");
+    }
+
+    private sealed class HardWalkSignInteraction : MonoBehaviour
+    {
+        private TextMesh? _text;
+        private bool _showingInteractionText;
+
+        internal void SetText(TextMesh text) => _text = text;
+
+        private void OnMouseDown()
+        {
+            if (_text == null) return;
+            _showingInteractionText = !_showingInteractionText;
+            _text.text = _showingInteractionText ? InteractionText : SignText;
+        }
     }
 }
