@@ -21,4 +21,10 @@ public sealed class Plugin : BasePlugin
         _harmony.PatchAll();
         Logger.LogInfo($"{PluginName} {PluginVersion} loaded; verified v1.0 tutorial and lobby-mode patches are enabled where supported.");
     }
+
+    // Shared mode gate for world objects, including the v1.0.0 spawn wooden sign.
+    internal static bool AreHardWalkMechanicsEnabled(int playerCount)
+    {
+        return GameModeConfig.IsHardWalkActive(GameModeConfig.PlayerCountMode.Value, playerCount);
+    }
 }
