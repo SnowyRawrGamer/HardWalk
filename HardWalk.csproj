@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>HardWalk</AssemblyName>
@@ -44,9 +44,11 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Explicit minimum set, useful when a build is run before wildcard item
-       evaluation and documenting the assemblies this plugin requires. -->
+  <!-- Explicit minimum set, including the IL2CPP base and system assemblies
+       required by generated interop types. -->
   <ItemGroup>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(GameDir)/BepInEx/interop/Il2Cppmscorlib.dll</HintPath><Private>False</Private></Reference>
+    <Reference Include="Il2CppSystem"><HintPath>$(GameDir)/BepInEx/interop/Il2CppSystem.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(GameDir)/BepInEx/interop/UnityEngine.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(GameDir)/BepInEx/interop/UnityEngine.CoreModule.dll</HintPath><Private>False</Private></Reference>
     <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(GameDir)/BepInEx/interop/UnityEngine.PhysicsModule.dll</HintPath><Private>False</Private></Reference>
