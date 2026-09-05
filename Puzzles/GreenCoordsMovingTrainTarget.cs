@@ -4,12 +4,9 @@ using UnityEngine.UI;
 
 namespace HardWalk.Puzzles;
 
-// Green Tower coordinates puzzle: the target is the moving Blue Train caboose.
-// Replace target type/method names with those from the current IL2CPP dump.
 [HarmonyPatch]
 internal static class GreenCoordsMovingTrainTarget
 {
-    private const string TrainName = "BlueTrain";
     private const string CabooseButtonName = "HardWalk_CabooseReleaseButton";
     private const string BoardText = "Back of Blue Train";
 
@@ -20,7 +17,6 @@ internal static class GreenCoordsMovingTrainTarget
         if (blueTrain == null) return;
         var caboose = FindRearCaboose(blueTrain);
         if (caboose == null) return;
-
         var button = caboose.Find(CabooseButtonName);
         if (button == null)
         {
@@ -30,7 +26,6 @@ internal static class GreenCoordsMovingTrainTarget
             button.localPosition = Vector3.back * 1.5f + Vector3.up * 1.1f;
             button.localScale = new Vector3(0.45f, 0.25f, 0.12f);
         }
-
         var trigger = button.GetComponent<TrainReleaseButton>();
         if (trigger == null) trigger = button.gameObject.AddComponent<TrainReleaseButton>();
         trigger.ReleasePuzzle = puzzleHub == null ? null : puzzleHub.GetComponent<Component>();
@@ -57,7 +52,6 @@ internal static class GreenCoordsMovingTrainTarget
     {
         if (board == null) return;
         foreach (var text in board.GetComponentsInChildren<Text>(true)) text.text = BoardText;
-        foreach (var text in board.GetComponentsInChildren<TMPro.TMP_Text>(true)) text.text = BoardText;
     }
 
     private sealed class TrainReleaseButton : MonoBehaviour
