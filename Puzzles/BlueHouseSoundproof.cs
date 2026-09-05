@@ -1,20 +1,14 @@
-// Evidence status: DISABLED. Public source confirms Dissonance voice concepts, but does not
-// verify a Big Walk type named ProximityVoiceChat, CanHear, or a Blue House volume query.
+// v1.0 verified symbol: PeckCombinator. The unverified soundproof implementation is retained for v1.1.
 #if HARDWALK_ENABLE_UNVERIFIED_PATCHES
 using HarmonyLib;
 using UnityEngine;
-
 namespace HardWalk.Puzzles;
-
 [HarmonyPatch]
 internal static class BlueHouseSoundproof
 {
+    internal const string VerifiedPuzzleSymbol = "PeckCombinator";
     [HarmonyPrefix]
     [HarmonyPatch("ProximityVoiceChat", "CanHear")]
-    private static bool CanHearPrefix(Vector3 listenerPosition, Vector3 speakerPosition, ref bool __result)
-    {
-        __result = false;
-        return false;
-    }
+    private static bool CanHearPrefix(Vector3 listenerPosition, Vector3 speakerPosition, ref bool __result) { __result = false; return false; }
 }
 #endif

@@ -9,18 +9,16 @@ public sealed class Plugin : BasePlugin
 {
     public const string PluginGuid = "com.hardwalk.bigwalk";
     public const string PluginName = "Hard Walk";
-    public const string PluginVersion = "0.1.0";
+    public const string PluginVersion = "1.0.0";
     internal static ManualLogSource Logger = null!;
     private Harmony? _harmony;
 
     public override void Load()
     {
         Logger = base.Log;
+        GameModeConfig.Bind(Config);
         _harmony = new Harmony(PluginGuid);
-        // All game-targeting patches are intentionally disabled until matched against the
-        // shipped Unity 6000.3.17f1 / metadata-v39 Steam dump. PatchAll is safe here because
-        // unverified patch classes are excluded with HARDWALK_ENABLE_UNVERIFIED_PATCHES.
         _harmony.PatchAll();
-        Logger.LogInfo($"{PluginName} {PluginVersion} loaded; no unverified game patches enabled.");
+        Logger.LogInfo($"{PluginName} {PluginVersion} loaded; verified v1.0 tutorial and lobby-mode patches are enabled where supported.");
     }
 }

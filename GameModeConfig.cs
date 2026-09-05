@@ -11,16 +11,16 @@ public enum LobbyPlayerCountMode
 
 public enum HardWalkGameMode
 {
-    BigWalk,
+    NormalWalk,
     HardWalk
 }
 
 internal static class GameModeConfig
 {
     internal const int MinimumHardWalkPlayers = 4;
-    internal const string BigWalkDescription = "Big Walk (Vanilla) — play the standard puzzle mechanics.";
-    internal const string HardWalkDescription = "Hard Walk (Modded Challenge) — enables Hard Walk puzzle mechanics for 4+ player lobbies.";
-    internal const string HardWalkRequirementText = "Hard Walk is available only inside 4+ Players.";
+    internal const string NormalWalkDescription = "Normal Walk — play the standard puzzle mechanics.";
+    internal const string HardWalkDescription = "Hard Walk — a harder set of puzzle mechanics for 4-player games.";
+    internal const string HardWalkRequirementText = "Hard Walk is available only when selecting a 4-player game.";
 
     internal static ConfigEntry<LobbyPlayerCountMode> PlayerCountMode { get; private set; } = null!;
     internal static ConfigEntry<HardWalkGameMode> SelectedMode { get; private set; } = null!;
@@ -29,23 +29,17 @@ internal static class GameModeConfig
     {
         PlayerCountMode = config.Bind("Lobby", "PlayerCountMode", LobbyPlayerCountMode.FourPlusPlayers,
             "Vanilla lobby size: 2 Players, 3 Players, or 4+ Players.");
-        SelectedMode = config.Bind("Lobby", "FourPlusGameMode", HardWalkGameMode.BigWalk,
-            $"Mode used only by 4+ Players lobbies. {BigWalkDescription} {HardWalkDescription}");
+        SelectedMode = config.Bind("Lobby", "FourPlayerGameMode", HardWalkGameMode.NormalWalk,
+            $"Mode used by 4-player lobbies. {NormalWalkDescription} {HardWalkDescription}");
     }
 
     internal static bool IsFourPlus(LobbyPlayerCountMode mode) => mode == LobbyPlayerCountMode.FourPlusPlayers;
-    internal static bool IsHardWalkAllowed(LobbyPlayerCountMode mode, int playerCount) =>
-        IsFourPlus(mode) && playerCount >= MinimumHardWalkPlayers;
-    internal static bool IsHardWalkActive(LobbyPlayerCountMode mode, int playerCount) =>
-        SelectedMode.Value == HardWalkGameMode.HardWalk && IsHardWalkAllowed(mode, playerCount);
+    internal static bool IsHardWalkAllowed(LobbyPlayerCountMode mode, int playerCount) => IsFourPlus(mode) && playerCount >= MinimumHardWalkPlayers;
+    internal static bool IsHardWalkActive(LobbyPlayerCountMode mode, int playerCount) => SelectedMode.Value == HardWalkGameMode.HardWalk && IsHardWalkAllowed(mode, playerCount);
 
     internal static void SelectPlayerCount(LobbyPlayerCountMode mode, int playerCount)
     {
         PlayerCountMode.Value = mode;
-        if (!IsHardWalkAllowed(mode, playerCount) && SelectedMode.Value == HardWalkGameMode.HardWalk)
-        {
-            SelectedMode.Value = HardWalkGameMode.BigWalk;
-            Plugin.Logger.LogInfo("Hard Walk disabled because the lobby is not a valid 4+ player lobby.");
-        }
+        if (!IsHardWalkAllowed(mode, playerCount)) SelectedMode.Value = HardWalkGameMode.NormalWalk;
     }
 }
