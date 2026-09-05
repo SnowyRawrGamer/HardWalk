@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace HardWalk.Puzzles;
 
-// Green Tower dense minefield with a held remote button that powers the final green orb.
-// Replace target type/method names with those from the current IL2CPP dump.
 [HarmonyPatch]
 internal static class GreenMinefieldStandsExpansion
 {
@@ -15,7 +13,6 @@ internal static class GreenMinefieldStandsExpansion
     internal static ConfigEntry<float> RedStandChance { get; private set; } = null!;
     internal static ConfigEntry<float> KnockbackForce { get; private set; } = null!;
 
-    private static bool _tetherHeld;
     private static Transform _remoteContainer;
 
     internal static void Bind(ConfigFile config)
@@ -31,7 +28,6 @@ internal static class GreenMinefieldStandsExpansion
     [HarmonyPatch("GreenMinefieldPuzzle", "Initialize")]
     private static void InitializePostfix(Transform minefieldRoot, Transform remoteContainer)
     {
-        _tetherHeld = false;
         _remoteContainer = remoteContainer;
         SpawnDenseField(minefieldRoot);
         SetRemotePower(false);
@@ -39,11 +35,11 @@ internal static class GreenMinefieldStandsExpansion
 
     [HarmonyPostfix]
     [HarmonyPatch("GreenMinefieldPuzzle", "OnTetherButtonPressed")]
-    private static void TetherPressedPostfix() { _tetherHeld = true; SetRemotePower(true); }
+    private static void TetherPressedPostfix() { SetRemotePower(true); }
 
     [HarmonyPostfix]
     [HarmonyPatch("GreenMinefieldPuzzle", "OnTetherButtonReleased")]
-    private static void TetherReleasedPostfix() { _tetherHeld = false; SetRemotePower(false); }
+    private static void TetherReleasedPostfix() { SetRemotePower(false); }
 
     [HarmonyPostfix]
     [HarmonyPatch("GreenMinefieldPuzzle", "OnStandTouched")]
@@ -75,8 +71,12 @@ internal static class GreenMinefieldStandsExpansion
     {
         if (_remoteContainer == null) return;
         _remoteContainer.gameObject.SetActive(true);
-        var animator = _remoteContainer.GetComponent<Animator>();
-        if (animator != null) animator.SetBool("Powered", powered);
+        var animator = _remoteContainer.GetComponent<Component>();
+        if (animator != null)
+        {
+            var setBool = animator.GetType().GetMethod("SetBool", new[] { typeof(string), typeof(bool) });
+            if (setBool != null) setBool.Invoke(animator, new object[] { "Powered", powered });
+        }
         var collider = _remoteContainer.GetComponent<Collider>();
         if (collider != null) collider.enabled = powered;
     }
@@ -90,11 +90,11 @@ internal static class GreenMinefieldStandsExpansion
             if (!other.CompareTag("Player")) return;
             var body = other.attachedRigidbody;
             if (IsRed && body != null) body.AddForce(Vector3.up * KnockbackForce.Value, ForceMode.VelocityChange);
-            if (IsTether) { _tetherHeld = true; SetRemotePower(true); }
+            if (IsTether) SetRemotePower(true);
         }
         private void OnTriggerExit(Collider other)
         {
-            if (IsTether && other.CompareTag("Player")) { _tetherHeld = false; SetRemotePower(false); }
+            if (IsTether && other.CompareTag("Player")) SetRemotePower(false);
         }
     }
 }
